@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-slot="http://www.w3.org/1999/XSL/Transform">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+    <script src="js/jquery-2.1.0.min.js"></script>
+</head>
+<body>
+<div id="app">
+<v-simple-table>
+    <template>
+        <thead>
+        <tr>
+            <th class="text-left">序号</th>
+            <th class="text-left">用户</th>
+            <th class="text-left">管理员</th>
+
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>1</td>
+            <td>小明</td>
+            <td>未完成</td>
+            <td>
+                <v-btn color='primary'>查看详情</v-btn>
+            </td>
+        </tr>
+        </tbody>
+    </template>
+</v-simple-table>
+</div>
+</body>
+<script>
+    let app = new vue({
+       el:"#app",
+       data:{
+           userlist:[
+               {"id":1,"username":"唐曾","isadmin":1},
+               {"id":2,"username":"猪八戒","isadmin":0},
+               {"id":3,"username":"孙悟空","isadmin":0}
+           ]
+       } ,method:{
+
+        }
+    });
+</script>
+</html>
