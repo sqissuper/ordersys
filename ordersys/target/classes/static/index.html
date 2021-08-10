@@ -47,7 +47,7 @@
                         <v-list-item-title>{{login.inputUsername}} 您好!</v-list-item-title>
                     </v-list-item-content>
                 </v-list-item>
-                <v-list-item link>
+                <v-list-item link v-on:click="status='dishesPage'">
                     <v-list-item-action>
                         <v-icon>mdi-cart-outline</v-icon>
                     </v-list-item-action>
@@ -55,7 +55,7 @@
                         <v-list-item-title>我要点菜</v-list-item-title>
                     </v-list-item-content>
                 </v-list-item>
-                <v-list-item link>
+                <v-list-item link v-on:click="status='orderList()'">
                     <v-list-item-action>
                         <v-icon>mdi-cart-outline</v-icon>
                     </v-list-item-action>
@@ -63,7 +63,7 @@
                         <v-list-item-title>我的订单</v-list-item-title>
                     </v-list-item-content>
                 </v-list-item>
-                <v-list-item>
+                <v-list-item link v-on:click="logout()">
                     <v-list-item-action>
                         <v-icon>mdi-logout</v-icon>
                     </v-list-item-action>
@@ -101,7 +101,7 @@
                                     {{dish.price}}
                                 </td>
                                 <td>
-                                    <v-switch></v-switch>
+                                    <v-switch v-model="dish.isSelected"></v-switch>
                                 </td>
                             </tr>
                         </tbody>
@@ -112,7 +112,7 @@
                         <div class="pa-2">已点 {{selectedDishCount}} 道菜, 总计 {{selectedDishPrice}} 元</div>
                     </v-col>
                     <v-col :cols="2">
-                        <v-btn color="primary" block>下单</v-btn>
+                        <v-btn color="primary" block v-on:click="dishSubmit()">下单</v-btn>
                     </v-col>
                 </v-row>
 
@@ -129,13 +129,12 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>1</td>
-                                <td>小明</td>
-                                <td>未完成</td>
-                                <td>2021-10-10</td>
+                            <tr v-for="order in orders">
+                                <td>{{order.id}}</td>
+                                <td>{{order.status==0 ? '未完成' : '已完成'}}</td>
+                                <td>{{order.createtime}}</td>
                                 <td>
-                                    <v-btn color='primary'>查看详情</v-btn>
+                                    <v-btn color='primary' v-on:click="detail(order.id)">查看详情</v-btn>
                                 </td>
                             </tr>
                         </tbody>
@@ -236,11 +235,11 @@
                                 </thead>
                                 <tbody>
                                     <tr v-for="dish in curOrder">
-                                        <td>香菜</td>
-                                        <td>10</td>
+                                        <td>{{dish.dish.name}}</td>
+                                        <td>{{dish.dish.price}}</td>
                                     </tr>
                                     <tr>
-                                        <td>总金额: 10</td>
+                                        <td>总金额: {{curOrderMoney()}}</td>
                                         <td>
                                             <v-btn color="primary" v-on:click="showCurOrder = false">关闭</v-btn>
                                         </td>
@@ -357,7 +356,89 @@
                             alert("注册失败");
                         }
                     });
+                },
+                //点餐下单
+                dishSubmit() {
+                    if(confirm("确认提交")) {
+                        let dids = "";//菜品id集合
+                        app.dishes.forEach(dish => {
+                            if (dish.isSelected) {
+                                dids += (dish.id + ",");
+                            }
+                        });
+                        if(dids != "") {
+                            jQuery.getJSON("/order/add",{"dids":dids},function (data) {
+                                if(data != null && data.data != null && data.data > 0) {
+                                    alert("点餐成功");
+                                } else {
+                                    alert("点餐失败");
+                                }
+                            });
+                        } else {
+                            alert("请先选中菜品");
+                        }
+                    }
+                },
+
+                //判断是否登录的方法
+                isLogin() {
+                    jQuery.getJSON("/user/islogin",{},function (data) {
+                        if(data != null && data.data != null && data.data.id > 0) {
+                            //登录状态
+                            app.login.inputUsername = data.data.username;
+                            //左侧栏
+                            app.login.isLogin=true;
+                            //请求获取菜品
+                            jQuery.getJSON("/dish/list",{},function (data) {
+                                if(data != null && data.data!= null) {
+                                    app.dishes = data.data;
+                                }
+                            });
+                        }
+                    });
+                },
+
+                //退出登录
+                logout() {
+                    if(confirm("是否确认退出")) {
+                        jQuery.getJSON("/user/logout",{},function (data) {
+                            if(data != null && data.data != null && data.data > 0) {
+                                location.href = location.href;
+                            }
+                        });
+                    }
+                },
+
+                //订餐列表
+                orderList() {
+                    jQuery.getJSON("/order/list",{},function (data) {
+                       if(data != null && data.data != null) {
+                           app.orders = data.data;
+                           app.status='ordersPage';
+                       }
+                    });
+                },
+
+                //查询列表详情
+                detail(oid){
+                    jQuery.getJSON("/detail/list",{"oid":oid},function (result) {
+                        if(result!=null && result.data!=null){
+                            app.curOrder = result.data;
+                            // 显示订单详情的页面
+                            app.showCurOrder = true;
+                        }
+                    });
+                },
+
+                // 计算某个订单详情的总钱数
+                curOrderMoney(){
+                    let  money = 0;
+                    app.curOrder.forEach(order=>{
+                        money += order.dish.price;
+                    });
+                    return money;
                 }
+
             },
             computed: {
                 // 点餐的个数
@@ -383,6 +464,8 @@
             },
             vuetify: new Vuetify(),
         });
+
+        app.isLogin();
     </script>
 </body>
 

@@ -63,4 +63,36 @@ public class UserInfoController {
         }
         return new ResponseBody<>(0,"",user);
     }
+
+
+    /**
+     * 判断是否登录
+     * @param req
+     * @return
+     */
+    @RequestMapping("/islogin")
+    public ResponseBody<UserInfo> isLogin(HttpServletRequest req) {
+        UserInfo userInfo = null;
+        HttpSession session = req.getSession(false);
+        if(session != null && session.getAttribute(AppFinal.USERINFO_SESSIONKEY) != null) {
+            userInfo = (UserInfo)session.getAttribute(AppFinal.USERINFO_SESSIONKEY);
+        }
+        return new ResponseBody<>(0,"",userInfo);
+    }
+
+    /**
+     * 退出登录
+     * @param req
+     * @return
+     */
+    @RequestMapping("/logout")
+    public ResponseBody<Integer> logout(HttpServletRequest req) {
+        int data = 0;
+        HttpSession session = req.getSession(false);
+        if(session != null && session.getAttribute(AppFinal.USERINFO_SESSIONKEY) != null) {
+            session.removeAttribute(AppFinal.USERINFO_SESSIONKEY);
+            data = 1;
+        }
+        return new ResponseBody<>(0,"",data);
+    }
 }

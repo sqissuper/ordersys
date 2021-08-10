@@ -14,4 +14,5 @@ import lombok.Data;
 public class OrderDetail {
     private int oid;
     private int did;
+    private Dish dish;
 }
